@@ -123,11 +123,15 @@ function isOuterpoint(n) {
 function getLeftRight(cur, next) {
     var left, right;
 
+    // If edge is going right
     if (next.x > cur.x) {
+        // return the cell above this edge as left of the path
+        // return the cell below, as this is right of the path
         return [
             point(cur.x, cur.y - 1),
             point(cur.x, cur.y)
         ];
+    // etc
     } else if (next.x < cur.x) {
         return [
             point(next.x, next.y),
@@ -148,7 +152,7 @@ function getLeftRight(cur, next) {
     }
 }
 
-function separateAreasStep(last, cur, areas, segment) {
+function separateAreasStep(last, cur, areas, segment, cellEdgeCount) {
     // Start with 1 area: the entire grid
     if (!areas) {
         areas = [new Set()];
@@ -197,6 +201,7 @@ function separateAreasStep(last, cur, areas, segment) {
 
             // Last area in the list is always the one we're currently in
             var area = new Set(areas[areas.length - 1]);
+            // So remove this area from our areas list, and replace it with our new found areas!
             areas = areas.slice(0, -1);
 
             // Find full left and right sides using flood fill
@@ -206,6 +211,8 @@ function separateAreasStep(last, cur, areas, segment) {
             while (visitList.length > 0) {
                 var n = visitList.shift();
 
+                // What does this do?
+                // area check might check if this cell is even valid (getLeftRight might return outside of grid cells)
                 if (rightCells.has(n) || !area.has(n)) continue;
                 leftCells.push(n);
                 area.delete(n);
@@ -229,7 +236,7 @@ function separateAreasStep(last, cur, areas, segment) {
 
             // Run segregation and tetris checks for the second to last area,
             // which will now no longer change. This allows for early termination.
-            if (!checkArea(areas[areas.length - 2])) {
+            if (!checkArea(areas[areas.length - 2], cellEdgeCount)) {
                 return false;
             }
         }
@@ -242,7 +249,7 @@ function separateAreasStep(last, cur, areas, segment) {
 }
 
 // Close up the last area and check it (for exit nodes)
-function checkLastArea(last, cur, areas, segment) {
+function checkLastArea(last, cur, areas, segment, cellEdgeCount) {
     // If there is currently a segment going on, skip ahead a node to arrive
     // at the areas if the solution were to end here
     var innerEdgeTmp =
@@ -251,18 +258,18 @@ function checkLastArea(last, cur, areas, segment) {
 
     var tmpRes = true;
     if (segment.length > 1 || innerEdgeTmp) {
-        tmpRes = separateAreasStep(cur, cur, areas, segment);
+        tmpRes = separateAreasStep(cur, cur, areas, segment, cellEdgeCount);
         areas = tmpRes[0];
     }
 
-    if (!tmpRes || !checkArea(areas[areas.length - 1])) {
+    if (!tmpRes || !checkArea(areas[areas.length - 1], cellEdgeCount)) {
         return false;
     } else {
         return true;
     }
 }
 
-function checkArea(area) {
+function checkArea(area, cellEdgeCount) {
 
     // Cancellation rule:
     // Let N be the number of cell entities in the region
@@ -274,7 +281,7 @@ function checkArea(area) {
     var cancellationCount = countCancellations(area);
 
     if (cancellationCount == 0) {
-        return validateAreaPlain(area);
+        return validateAreaPlain(area, cellEdgeCount);
     }
 
     // Otherwise, here we go...
@@ -303,7 +310,7 @@ function checkArea(area) {
                     nonempty[index].ignore = true;
                 }
 
-                var pass = validateAreaPlain(area);
+                var pass = validateAreaPlain(area, cellEdgeCount);
 
                 if (currentRemovalNumber < cancellationCount) {
                     if (pass) return false;
@@ -352,8 +359,8 @@ function countCancellations(area) {
     return count;
 }
 
-function validateAreaPlain(area) {
-    return checkSuns(area) && checkSegregation(area) && checkTetrisArea(area) && checkTetris(area);
+function validateAreaPlain(area, cellEdgeCount) {
+    return checkSuns(area) && checkSegregation(area) && checkTetrisArea(area) && checkTetris(area) && checkEdgeCount(cellEdgeCount, false, area);
 }
 
 // Respects ignore flag
@@ -767,16 +774,17 @@ function findSolution(path, visited, required, edgeRequired, exitsRemaining, are
         if (path.length >= 2) {
             var prevn = path[path.length - 2];
 
-            res = separateAreasStep(prevn, cn, areas, segment);
-
-            // Partial solution contains area that is already wrong, abort
-            if (!res) {
-                return false;
-            }
-
             // Partial solution contains triangle cells that are already wrong, abort
             cellEdgeCount = updateCellEdgeCount(prevn, cn, cellEdgeCount.slice())
             if(!checkEdgeCount(cellEdgeCount, true)) {
+                console.log("Constraint violated, backtracking", path)
+                return false;
+            }
+
+            res = separateAreasStep(prevn, cn, areas, segment, cellEdgeCount);
+            // Partial solution contains area that is already wrong, abort
+            if (!res) {
+                console.log("Constraint violated, backtracking", path)
                 return false;
             }
 
@@ -787,7 +795,7 @@ function findSolution(path, visited, required, edgeRequired, exitsRemaining, are
         // If we're at an exit node and the partial solution along with the last
         // area is correct, then the full solution is correct
         if (puzzle.nodes[cn.x][cn.y].type == NODE_TYPE.EXIT) {
-            if (checkLastArea(prevn, cn, areas, segment) && checkRequiredNodes(path, required) && checkRequiredEdges(path, edgeRequired) && checkTriangleCells(path, cellEdgeCount)) {
+            if (checkLastArea(prevn, cn, areas, segment, cellEdgeCount) && checkRequiredNodes(path, required) && checkRequiredEdges(path, edgeRequired) && checkTriangleCells(path, cellEdgeCount)) {
                 return path;
             } else {
                 exitsRemaining--;
@@ -831,8 +839,11 @@ function updateCellEdgeCount(prevn, cn, cellEdgeCount) {
     return cellEdgeCount;
 }
 
-function checkEdgeCount(cellEdgeCount, partialPath) {
-    for (var c  of getCellsByType(CELL_TYPE.TRIANGLE)) {
+//
+function checkEdgeCount(cellEdgeCount, partialPath, area) {
+    for (var c of getCellsByType(CELL_TYPE.TRIANGLE)) {
+        // If we are filtering on an area, and this point isn't in it, then continue
+        if(area && !area.has(point(c.x, c.y))) {continue;}
         let expectedAdjacentEdges = puzzle.cells[c.x][c.y].triangleNum;
         let actualEdgeCount = cellEdgeCount[c.y * (puzzle.width -1) + c.x];
 
@@ -850,6 +861,7 @@ function checkEdgeCount(cellEdgeCount, partialPath) {
     }
     return true
 }
+
 
 function checkTriangleCells(path, cellEdgeCount) {
     // If cell edge count isn't passed, then work it out from scratch
