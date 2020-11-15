@@ -466,7 +466,6 @@ function addGridEventHandlers() {
         var y = hoveredEl.attr('data-y');
 
         var color;
-
         switch (e.key) {
             case '1':
             case 'b':
@@ -490,6 +489,11 @@ function addGridEventHandlers() {
                 break;
             default:
                 return
+        }
+
+
+        if (puzzle.cells[x][y].type == 0) {
+            puzzle.cells[x][y].type = 1;
         }
 
         puzzle.cells[x][y].color = color;
