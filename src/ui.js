@@ -257,29 +257,69 @@ function addVisualCancellationCell(x, y, baseEl) {
 }
 
 function addVisualTriangleCell(x, y, baseEl) {
-    baseEl.attr('data-num-triangles', puzzle.cells[x][y].triangleNum)
+    num_triangles = puzzle.cells[x][y].triangleNum
+    baseEl.attr('data-num-triangles', num_triangles)
 
     var width = spacing / 3.9 // Change this to change triangle size
     var height = width * Math.sqrt(3) / 2
     var top_y = nodeX(y) + spacing / 2 - height/2
     var base_y = nodeX(y) + spacing / 2 + height/2
 
-    var top_x = nodeX(x) + spacing / 2
-    var left_x = nodeX(x) + spacing / 2 - width / 2
-    var right_x = nodeX(x) + spacing / 2 + width / 2
+    var middle_triangle_top_x = nodeX(x) + spacing / 2
+    var middle_triangle_left_x = nodeX(x) + spacing / 2 - width / 2
+    var middle_triangle_right_x = nodeX(x) + spacing / 2 + width / 2
 
+    if(num_triangles == 1 || num_triangles == 3) {
+        var top = middle_triangle_top_x + "," + top_y
+        var left = middle_triangle_left_x + "," + base_y
+        var right = middle_triangle_right_x + "," + base_y
 
+        var iconEl = $('<polygon/>')
+            .attr('points', [top, left, right].join(" "))
+            .appendTo(gridEl);
+        iconEl.css('fill', getColorString(CELL_COLOR.ORANGE));
+    }
 
+    if(num_triangles == 3) {
+        var top = middle_triangle_top_x - width + "," + top_y
+        var left = middle_triangle_left_x - width + "," + base_y
+        var right = middle_triangle_right_x - width + "," + base_y
 
-    var top = top_x + "," + top_y
-    var left = left_x + "," + base_y
-    var right = right_x + "," + base_y
+        var iconEl_2 = $('<polygon/>')
+            .attr('points', [top, left, right].join(" "))
+            .appendTo(gridEl);
+        iconEl_2.css('fill', getColorString(CELL_COLOR.ORANGE));
 
-    var iconEl = $('<polygon/>')
-        .attr('points', [top, left, right].join(" "))
-        .appendTo(gridEl);
+        var top = middle_triangle_top_x + width + "," + top_y
+        var left = middle_triangle_left_x + width + "," + base_y
+        var right = middle_triangle_right_x + width + "," + base_y
 
-    iconEl.css('fill', getColorString(CELL_COLOR.ORANGE));
+        var iconEl_3 = $('<polygon/>')
+            .attr('points', [top, left, right].join(" "))
+            .appendTo(gridEl);
+        iconEl_3.css('fill', getColorString(CELL_COLOR.ORANGE));
+    }
+
+    if(num_triangles == 2) {
+        var top = middle_triangle_top_x - (width/2) + "," + top_y
+        var left = middle_triangle_left_x - (width/2) + "," + base_y
+        var right = middle_triangle_right_x - (width/2) + "," + base_y
+
+        var iconEl_2 = $('<polygon/>')
+            .attr('points', [top, left, right].join(" "))
+            .appendTo(gridEl);
+        iconEl_2.css('fill', getColorString(CELL_COLOR.ORANGE));
+
+        var top = middle_triangle_top_x + (width/2) + "," + top_y
+        var left = middle_triangle_left_x + (width/2) + "," + base_y
+        var right = middle_triangle_right_x + (width/2) + "," + base_y
+
+        var iconEl_3 = $('<polygon/>')
+            .attr('points', [top, left, right].join(" "))
+            .appendTo(gridEl);
+        iconEl_3.css('fill', getColorString(CELL_COLOR.ORANGE));
+    }
+
 }
 
 
@@ -530,7 +570,7 @@ function addGridEventHandlers() {
         }
 
         if(puzzle.cells[x][y].type == CELL_TYPE.TRIANGLE) {
-            if([1,2,3].indexOf(e.key) >= 0) {
+            if(["1","2","3"].indexOf(e.key) >= 0) {
                 puzzle.cells[x][y].triangleNum = e.key
             }
         }
