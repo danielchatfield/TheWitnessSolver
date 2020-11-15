@@ -745,6 +745,8 @@ function findSolution(path, visited, required, edgeRequired, exitsRemaining, are
         for (var n of getEdgesByType(EDGE_TYPE.REQUIRED)) {
             edgeRequired.add(n);
         }
+
+        cellEdgeCount = makeBlankListForAllCells()
     }
 
     if (!path || path.length == 0) {
@@ -772,7 +774,11 @@ function findSolution(path, visited, required, edgeRequired, exitsRemaining, are
                 return false;
             }
 
-            // TODO: short circuit if triangle violated
+            // Partial solution contains triangle cells that are already wrong, abort
+            cellEdgeCount = updateCellEdgeCount(prevn, cn, cellEdgeCount.slice())
+            if(!checkEdgeCount(cellEdgeCount, true)) {
+                return false;
+            }
 
             areas = res[0];
             segment = res[1];
@@ -781,7 +787,7 @@ function findSolution(path, visited, required, edgeRequired, exitsRemaining, are
         // If we're at an exit node and the partial solution along with the last
         // area is correct, then the full solution is correct
         if (puzzle.nodes[cn.x][cn.y].type == NODE_TYPE.EXIT) {
-            if (checkLastArea(prevn, cn, areas, segment) && checkRequiredNodes(path, required) && checkRequiredEdges(path, edgeRequired) && checkTriangleCells(path)) {
+            if (checkLastArea(prevn, cn, areas, segment) && checkRequiredNodes(path, required) && checkRequiredEdges(path, edgeRequired) && checkTriangleCells(path, cellEdgeCount)) {
                 return path;
             } else {
                 exitsRemaining--;
@@ -812,23 +818,23 @@ function findSolution(path, visited, required, edgeRequired, exitsRemaining, are
     }
 }
 
-function checkTriangleCells(path, partialPath) {
-    // Step through path, incrementing a count of number of edges each cell has on the path
-    // Then for each triangle cell validate that the constraint isn't violated.
-    var adjacentEdgeCount = new Array((puzzle.height - 1) * (puzzle.width -1)).fill(0);
+function makeBlankListForAllCells() {
+    return new Array((puzzle.height - 1) * (puzzle.width -1)).fill(0);
+}
 
-    for (var i = 1; i < path.length; i++) {
-        let e = edgeBetweenNodes(path[i-1], path[i]);
-        let adjacentCells = cellsForEdge(e);
-        for (const c of adjacentCells) {
-            adjacentEdgeCount[c.y * (puzzle.width-1) + c.x]++
-        }
+function updateCellEdgeCount(prevn, cn, cellEdgeCount) {
+    let e = edgeBetweenNodes(prevn, cn);
+    let adjacentCells = cellsForEdge(e);
+    for (const c of adjacentCells) {
+        cellEdgeCount[c.y * (puzzle.width-1) + c.x]++;
     }
+    return cellEdgeCount;
+}
 
-
+function checkEdgeCount(cellEdgeCount, partialPath) {
     for (var c  of getCellsByType(CELL_TYPE.TRIANGLE)) {
         let expectedAdjacentEdges = puzzle.cells[c.x][c.y].triangleNum;
-        let actualEdgeCount = adjacentEdgeCount[c.y * (puzzle.width -1) + c.x];
+        let actualEdgeCount = cellEdgeCount[c.y * (puzzle.width -1) + c.x];
 
         // If this is a partial path then its ok to be less than the expected value
         // as we aren't finished so we only bail if we've exceeded it.
@@ -842,8 +848,18 @@ function checkTriangleCells(path, partialPath) {
             }
         }
     }
-
     return true
+}
+
+function checkTriangleCells(path, cellEdgeCount) {
+    // If cell edge count isn't passed, then work it out from scratch
+    if(!cellEdgeCount) {
+        var cellEdgeCount = makeBlankListForAllCells();
+        for (var i = 1; i < path.length; i++) {
+            cellEdgeCount = updateCellEdgeCount(path[i-1], path[i], cellEdgeCount)
+        }
+    }
+    return checkEdgeCount(cellEdgeCount, false)
 }
 
 // cellsForEdge returns the 1/2 cells that are adjacent to the given edge
