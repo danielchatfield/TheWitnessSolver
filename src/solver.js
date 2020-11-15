@@ -724,7 +724,7 @@ function getEdgesByType(type) {
     return edges;
 }
 
-function findSolution(path, visited, required, edgeRequired, exitsRemaining, areas, segment) {
+function findSolution(path, visited, required, edgeRequired, exitsRemaining, areas, segment, cellEdgeCount) {
 
     // This block runs only on the first time findSolution is called
     if (!required) {
@@ -750,7 +750,7 @@ function findSolution(path, visited, required, edgeRequired, exitsRemaining, are
     if (!path || path.length == 0) {
         // If this is the first call, recursively try every starting node
         for (var n of getNodesByType(NODE_TYPE.START)) {
-            var fullPath = findSolution([n], new Set([n]), required, edgeRequired, exitsRemaining, areas, segment);
+            var fullPath = findSolution([n], new Set([n]), required, edgeRequired, exitsRemaining, areas, segment, cellEdgeCount);
 
             if (fullPath) {
                 return fullPath;
@@ -801,7 +801,7 @@ function findSolution(path, visited, required, edgeRequired, exitsRemaining, are
             var newVisited = new Set(visited);
             newVisited.add(n);
 
-            var fullPath = findSolution(newPath, newVisited, required, edgeRequired, exitsRemaining, areas, segment);
+            var fullPath = findSolution(newPath, newVisited, required, edgeRequired, exitsRemaining, areas, segment, cellEdgeCount);
 
             if (fullPath) {
                 return fullPath;
@@ -812,7 +812,7 @@ function findSolution(path, visited, required, edgeRequired, exitsRemaining, are
     }
 }
 
-function checkTriangleCells(path) {
+function checkTriangleCells(path, partialPath) {
     // Step through path, incrementing a count of number of edges each cell has on the path
     // Then for each triangle cell validate that the constraint isn't violated.
     var adjacentEdgeCount = new Array((puzzle.height - 1) * (puzzle.width -1)).fill(0);
@@ -830,8 +830,16 @@ function checkTriangleCells(path) {
         let expectedAdjacentEdges = puzzle.cells[c.x][c.y].triangleNum;
         let actualEdgeCount = adjacentEdgeCount[c.y * (puzzle.width -1) + c.x];
 
-        if (expectedAdjacentEdges !== actualEdgeCount) {
-            return false
+        // If this is a partial path then its ok to be less than the expected value
+        // as we aren't finished so we only bail if we've exceeded it.
+        if (partialPath) {
+            if (actualEdgeCount > expectedAdjacentEdges) {
+                return false
+            }
+        } else {
+            if (expectedAdjacentEdges !== actualEdgeCount) {
+                return false
+            }
         }
     }
 
