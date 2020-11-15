@@ -257,17 +257,19 @@ function addVisualCancellationCell(x, y, baseEl) {
 }
 
 function addVisualTriangleCell(x, y, baseEl) {
-    baseEl.attr('data-num-triangles', puzzle.cells[x][y].triangle_num)
-
-    var top_x = nodeX(x) + spacing / 2
+    baseEl.attr('data-num-triangles', puzzle.cells[x][y].triangleNum)
 
     var width = spacing / 3.9 // Change this to change triangle size
-    var left_x = nodeX(x) + spacing / 2 - width / 2
-    var right_x = nodeX(x) + spacing / 2 + width / 2
-
     var height = width * Math.sqrt(3) / 2
     var top_y = nodeX(y) + spacing / 2 - height/2
     var base_y = nodeX(y) + spacing / 2 + height/2
+
+    var top_x = nodeX(x) + spacing / 2
+    var left_x = nodeX(x) + spacing / 2 - width / 2
+    var right_x = nodeX(x) + spacing / 2 + width / 2
+
+
+
 
     var top = top_x + "," + top_y
     var left = left_x + "," + base_y
@@ -493,38 +495,45 @@ function addGridEventHandlers() {
         var x = hoveredEl.attr('data-x');
         var y = hoveredEl.attr('data-y');
 
-        var color;
-        switch (e.key) {
-            case '1':
-            case 'b':
-            case 'B':
-                color = BLACK;
-                break;
-            case '2':
-            case 'w':
-            case 'W':
-                color = WHITE;
-                break;
-            case '3':
-            case 'g':
-            case 'G':
-                color = GREEN;
-                break;
-            case '4':
-            case 'p':
-            case 'P':
-                color = PURPLE;
-                break;
-            default:
-                return
+        if (puzzle.cells[x][y].type == CELL_TYPE.NONE) {
+            puzzle.cells[x][y].type = get_next_cell_type_in_cycle(CELL_TYPE.NONE);
         }
 
+        if(puzzle.cells[x][y].type == CELL_TYPE.SQUARE) {
+            var color;
+            switch (e.key) {
+                case '1':
+                case 'b':
+                case 'B':
+                    color = BLACK;
+                    break;
+                case '2':
+                case 'w':
+                case 'W':
+                    color = WHITE;
+                    break;
+                case '3':
+                case 'g':
+                case 'G':
+                    color = GREEN;
+                    break;
+                case '4':
+                case 'p':
+                case 'P':
+                    color = PURPLE;
+                    break;
+                default:
+                    return
+            }
 
-        if (puzzle.cells[x][y].type == 0) {
-            puzzle.cells[x][y].type = 1;
+            puzzle.cells[x][y].color = color;
         }
 
-        puzzle.cells[x][y].color = color;
+        if(puzzle.cells[x][y].type == CELL_TYPE.TRIANGLE) {
+            if([1,2,3].indexOf(e.key) >= 0) {
+                puzzle.cells[x][y].triangleNum = e.key
+            }
+        }
 
         updateVisualGrid();
     })

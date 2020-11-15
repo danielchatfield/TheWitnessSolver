@@ -212,7 +212,7 @@ function updateTetrisLayoutProperties(x, y) {
 }
 
 function initTriangleProperties(puzzle, x, y) {
-    puzzle.cells[x][y].triangle_num = 1
+    puzzle.cells[x][y].triangleNum = 1
 }
 
 function horEdgeExists(x, y) {
