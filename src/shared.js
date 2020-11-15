@@ -116,6 +116,15 @@ function edge(x, y, ori) {
     return edgePool[x][y][ori];
 }
 
+var cellPool = [];
+
+function cell(x,y) {
+    if (!cellPool[x]) cellPool[x] = [];
+    if (!cellPool[x][y]) cellPool[x][y] = {x: x, y: y};
+
+    return cellPool[x][y];
+}
+
 function create2DArray(w, h) {
     var arr = [];
 

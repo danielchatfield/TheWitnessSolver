@@ -674,6 +674,18 @@ function determineAuxilaryRequired() {
     return aux;
 }
 
+function getCellsByType(type) {
+    var cells = [];
+
+    for (var x = 0; x < puzzle.width - 1; x++) {
+        for (var y = 0; y < puzzle.height - 1; y++) {
+            if (puzzle.cells[x][y].type == type) {
+                cells.push(cell(x,y))
+            }
+        }
+    }
+}
+
 function getNodesByType(type) {
     var nodes = [];
 
@@ -712,7 +724,8 @@ function getEdgesByType(type) {
 
 function findSolution(path, visited, required, edgeRequired, exitsRemaining, areas, segment) {
 
-    if (!required) {
+    // This block runs only on the first time findSolution is called
+    if (required) {
 
         required = determineAuxilaryRequired();
 
@@ -757,6 +770,8 @@ function findSolution(path, visited, required, edgeRequired, exitsRemaining, are
                 return false;
             }
 
+            // TODO: short circuit if triangle violated
+
             areas = res[0];
             segment = res[1];
         }
@@ -764,7 +779,7 @@ function findSolution(path, visited, required, edgeRequired, exitsRemaining, are
         // If we're at an exit node and the partial solution along with the last
         // area is correct, then the full solution is correct
         if (puzzle.nodes[cn.x][cn.y].type == NODE_TYPE.EXIT) {
-            if (checkLastArea(prevn, cn, areas, segment) && checkRequiredNodes(path, required) && checkRequiredEdges(path, edgeRequired)) {
+            if (checkLastArea(prevn, cn, areas, segment) && checkRequiredNodes(path, required) && checkRequiredEdges(path, edgeRequired) && checkTriangleCells(path)) {
                 return path;
             } else {
                 exitsRemaining--;
@@ -793,4 +808,59 @@ function findSolution(path, visited, required, edgeRequired, exitsRemaining, are
 
         return false;
     }
+}
+
+function checkTriangleCells(path) {
+    // Step through path, incrementing a count of number of edges each cell has on the path
+    // Then for each triangle cell validate that the constraint isn't violated.
+    var adjacentEdgeCount = new Array(puzzle.height * puzzle.width).fill(0);
+
+    for (var i = 1; i < path.length; i++) {
+        let e = edgeBetweenNodes(path[i-1], path[i]);
+        let adjacentCells = cellsForEdge(e);
+        for (const c of adjacentCells) {
+            adjacentEdgeCount[c.y * puzzle.width + c.x]++
+        }
+    }
+
+
+    for (var c  of getCellsByType(CELL_TYPE.TRIANGLE)) {
+        let expectedAdjacentEdges = puzzle.cells[c.x][c.y].triangleNum;
+        let actualEdgeCount = adjacentEdgeCount[c.y * puzzle.width + c.x];
+
+        if (expectedAdjacentEdges !== actualEdgeCount) {
+            return false
+        }
+    }
+
+    return true
+}
+
+// cellsForEdge returns the 1/2 cells that are adjacent to the given edge
+function cellsForEdge(e) {
+    var cells = [];
+    if (e.ori == ORIENTATION_TYPE.VER) {
+        if (e.x > 0) {
+            cells.push(cell(e.x-1, e.y))
+        }
+        if (e.x < puzzle.width - 1) {
+            cells.push(cell(e.x+1, e.y))
+        }
+    } else {
+        if (e.y > 0) {
+            cells.push(cell(e.x, e.y-1))
+        }
+        if (e.y < puzzle.height - 1) {
+            cells.push(cell(e.x, e.y+1))
+        }
+    }
+    return cells;
+}
+
+function edgeBetweenNodes(a,b) {
+    return edge(min(a.x, b.x), min(b.x, b.y), a.x == b.x? ORIENTATION_TYPE.VER : ORIENTATION_TYPE.HOR)
+}
+
+function min(a,b) {
+    return a < b? a: b
 }
