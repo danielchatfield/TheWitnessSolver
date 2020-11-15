@@ -147,14 +147,18 @@ function addVisualGridCells() {
                 .css('fill', 'rgba(0, 0, 0, 0)')
                 .appendTo(gridEl);
 
-            if (puzzle.cells[x][y].type == CELL_TYPE.SQUARE) {
+            cell_type = puzzle.cells[x][y].type
+
+            if (cell_type == CELL_TYPE.SQUARE) {
                 addVisualSquareCell(x, y, baseEl);
-            } else if (puzzle.cells[x][y].type == CELL_TYPE.TETRIS || puzzle.cells[x][y].type == CELL_TYPE.TETRIS_ROTATED || puzzle.cells[x][y].type == CELL_TYPE.TETRIS_HOLLOW) {
+            } else if (cell_type == CELL_TYPE.TETRIS || puzzle.cells[x][y].type == CELL_TYPE.TETRIS_ROTATED || puzzle.cells[x][y].type == CELL_TYPE.TETRIS_HOLLOW) {
                 addVisualGridTetrisCell(x, y, baseEl);
-            } else if (puzzle.cells[x][y].type == CELL_TYPE.SUN) {
+            } else if (cell_type == CELL_TYPE.SUN) {
                 addVisualSunCell(x, y, baseEl);
-            } else if (puzzle.cells[x][y].type == CELL_TYPE.CANCELLATION) {
+            } else if (cell_type == CELL_TYPE.CANCELLATION) {
                 addVisualCancellationCell(x, y, baseEl);
+            } else if (cell_type == CELL_TYPE.TRIANGLE) {
+                addVisualTriangleCell(x, y, baseEl)
             }
         }
     }
@@ -169,6 +173,28 @@ function addVisualSquareCell(x, y, baseEl) {
         .appendTo(gridEl);
 
     iconEl.css('fill', getColorString(puzzle.cells[x][y].color));
+}
+
+function addVisualTriangleCell(x, y, baseEl) {
+    var top_x = nodeX(x) + spacing / 2
+
+    var width = spacing / 3.9 // Change this to change triangle size
+    var left_x = nodeX(x) + spacing / 2 - width / 2
+    var right_x = nodeX(x) + spacing / 2 + width / 2
+
+    var height = width * Math.sqrt(3) / 2
+    var top_y = nodeX(y) + spacing / 2 - height/2
+    var base_y = nodeX(y) + spacing / 2 + height/2
+
+    var top = top_x + "," + top_y
+    var left = left_x + "," + base_y
+    var right = right_x + "," + base_y
+
+    var iconEl = $('<polygon/>')
+        .attr('points', [top, left, right].join(" "))
+        .appendTo(gridEl);
+
+    iconEl.css('fill', getColorString(CELL_COLOR.ORANGE));
 }
 
 function addVisualGridTetrisCell(x, y, baseEl) {
