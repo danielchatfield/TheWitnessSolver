@@ -10,7 +10,7 @@ var PUZZLE_TYPES = {
     },
     'Triangles': {
         'NONE': 0,
-        'SUN': 1,
+        'TRIANGLE': 1,
         // Used in UI to loop around
         'LAST': 1
     },
@@ -22,8 +22,9 @@ var PUZZLE_TYPES = {
         'SUN': 4,
         'CANCELLATION': 5,
         'TETRIS_HOLLOW': 6,
+        'TRIANGLE': 7,
         // Used in UI to loop around
-        'LAST': 6
+        'LAST': 7
     }
 }
 
