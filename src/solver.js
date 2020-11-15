@@ -684,6 +684,8 @@ function getCellsByType(type) {
             }
         }
     }
+
+    return cells;
 }
 
 function getNodesByType(type) {
@@ -779,7 +781,7 @@ function findSolution(path, visited, required, edgeRequired, exitsRemaining, are
         // If we're at an exit node and the partial solution along with the last
         // area is correct, then the full solution is correct
         if (puzzle.nodes[cn.x][cn.y].type == NODE_TYPE.EXIT) {
-            if (checkLastArea(prevn, cn, areas, segment) && checkRequiredNodes(path, required) && checkRequiredEdges(path, edgeRequired)) {
+            if (checkLastArea(prevn, cn, areas, segment) && checkRequiredNodes(path, required) && checkRequiredEdges(path, edgeRequired) && checkTriangleCells(path)) {
                 return path;
             } else {
                 exitsRemaining--;
@@ -844,21 +846,21 @@ function cellsForEdge(e) {
             cells.push(cell(e.x-1, e.y))
         }
         if (e.x < puzzle.width - 1) {
-            cells.push(cell(e.x+1, e.y))
+            cells.push(cell(e.x, e.y))
         }
     } else {
         if (e.y > 0) {
             cells.push(cell(e.x, e.y-1))
         }
         if (e.y < puzzle.height - 1) {
-            cells.push(cell(e.x, e.y+1))
+            cells.push(cell(e.x, e.y))
         }
     }
     return cells;
 }
 
 function edgeBetweenNodes(a,b) {
-    return edge(min(a.x, b.x), min(b.x, b.y), a.x == b.x? ORIENTATION_TYPE.VER : ORIENTATION_TYPE.HOR)
+    return edge(min(a.x, b.x), min(b.y, b.y), a.x == b.x? ORIENTATION_TYPE.VER : ORIENTATION_TYPE.HOR)
 }
 
 function min(a,b) {
