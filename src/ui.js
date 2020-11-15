@@ -147,14 +147,18 @@ function addVisualGridCells() {
                 .css('fill', 'rgba(0, 0, 0, 0)')
                 .appendTo(gridEl);
 
-            if (puzzle.cells[x][y].type == CELL_TYPE.SQUARE) {
+            cell_type = puzzle.cells[x][y].type
+
+            if (cell_type == CELL_TYPE.SQUARE) {
                 addVisualSquareCell(x, y, baseEl);
-            } else if (puzzle.cells[x][y].type == CELL_TYPE.TETRIS || puzzle.cells[x][y].type == CELL_TYPE.TETRIS_ROTATED || puzzle.cells[x][y].type == CELL_TYPE.TETRIS_HOLLOW) {
+            } else if (cell_type == CELL_TYPE.TETRIS || puzzle.cells[x][y].type == CELL_TYPE.TETRIS_ROTATED || puzzle.cells[x][y].type == CELL_TYPE.TETRIS_HOLLOW) {
                 addVisualGridTetrisCell(x, y, baseEl);
-            } else if (puzzle.cells[x][y].type == CELL_TYPE.SUN) {
+            } else if (cell_type == CELL_TYPE.SUN) {
                 addVisualSunCell(x, y, baseEl);
-            } else if (puzzle.cells[x][y].type == CELL_TYPE.CANCELLATION) {
+            } else if (cell_type == CELL_TYPE.CANCELLATION) {
                 addVisualCancellationCell(x, y, baseEl);
+            } else if (cell_type == CELL_TYPE.TRIANGLE) {
+                addVisualTriangleCell(x, y, baseEl)
             }
         }
     }
@@ -251,6 +255,33 @@ function addVisualCancellationCell(x, y, baseEl) {
     iconEl2.appendTo(gridEl);
     iconEl3.appendTo(gridEl);
 }
+
+function addVisualTriangleCell(x, y, baseEl) {
+    baseEl.attr('data-num-triangles', puzzle.cells[x][y].triangleNum)
+
+    var width = spacing / 3.9 // Change this to change triangle size
+    var height = width * Math.sqrt(3) / 2
+    var top_y = nodeX(y) + spacing / 2 - height/2
+    var base_y = nodeX(y) + spacing / 2 + height/2
+
+    var top_x = nodeX(x) + spacing / 2
+    var left_x = nodeX(x) + spacing / 2 - width / 2
+    var right_x = nodeX(x) + spacing / 2 + width / 2
+
+
+
+
+    var top = top_x + "," + top_y
+    var left = left_x + "," + base_y
+    var right = right_x + "," + base_y
+
+    var iconEl = $('<polygon/>')
+        .attr('points', [top, left, right].join(" "))
+        .appendTo(gridEl);
+
+    iconEl.css('fill', getColorString(CELL_COLOR.ORANGE));
+}
+
 
 function addVisualGridEdges(drawHighlighted) {
     // Set up horizontal edges
@@ -446,8 +477,7 @@ function addGridEventHandlers() {
         var x = +this.getAttribute('data-x');
         var y = +this.getAttribute('data-y');
 
-        puzzle.cells[x][y].type = (puzzle.cells[x][y].type + 1) % (CELL_TYPE.LAST + 1);
-
+        puzzle.cells[x][y].type = get_next_cell_type_in_cycle(puzzle.cells[x][y].type)
         updateVisualGrid();
     });
     $('.cell').hover(function(){
@@ -465,38 +495,45 @@ function addGridEventHandlers() {
         var x = hoveredEl.attr('data-x');
         var y = hoveredEl.attr('data-y');
 
-        var color;
-        switch (e.key) {
-            case '1':
-            case 'b':
-            case 'B':
-                color = BLACK;
-                break;
-            case '2':
-            case 'w':
-            case 'W':
-                color = WHITE;
-                break;
-            case '3':
-            case 'g':
-            case 'G':
-                color = GREEN;
-                break;
-            case '4':
-            case 'p':
-            case 'P':
-                color = PURPLE;
-                break;
-            default:
-                return
+        if (puzzle.cells[x][y].type == CELL_TYPE.NONE) {
+            puzzle.cells[x][y].type = get_next_cell_type_in_cycle(CELL_TYPE.NONE);
         }
 
+        if(puzzle.cells[x][y].type == CELL_TYPE.SQUARE) {
+            var color;
+            switch (e.key) {
+                case '1':
+                case 'b':
+                case 'B':
+                    color = BLACK;
+                    break;
+                case '2':
+                case 'w':
+                case 'W':
+                    color = WHITE;
+                    break;
+                case '3':
+                case 'g':
+                case 'G':
+                    color = GREEN;
+                    break;
+                case '4':
+                case 'p':
+                case 'P':
+                    color = PURPLE;
+                    break;
+                default:
+                    return
+            }
 
-        if (puzzle.cells[x][y].type == 0) {
-            puzzle.cells[x][y].type = 1;
+            puzzle.cells[x][y].color = color;
         }
 
-        puzzle.cells[x][y].color = color;
+        if(puzzle.cells[x][y].type == CELL_TYPE.TRIANGLE) {
+            if([1,2,3].indexOf(e.key) >= 0) {
+                puzzle.cells[x][y].triangleNum = e.key
+            }
+        }
 
         updateVisualGrid();
     })
@@ -698,7 +735,7 @@ puzzleTypeSelector.change(function() {
     //updateVisualGrid();
     var puzzle_type = this.value
     SELECTED_PUZZLE_TYPE = puzzle_type
-    CELL_TYPE = PUZZLE_TYPES[puzzle_type];
+    CELL_TYPES_TO_CYCLE = PUZZLE_TYPES[puzzle_type];
 });
 
 function initialize() {

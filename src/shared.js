@@ -1,33 +1,5 @@
 var SELECTED_PUZZLE_TYPE = "Squares";
 
-// Types
-var PUZZLE_TYPES = {
-    'Squares': {
-        'NONE': 0,
-        'SQUARE': 1,
-        // Used in UI to loop around
-        'LAST': 1
-    },
-    'Triangles': {
-        'NONE': 0,
-        'TRIANGLE': 1,
-        // Used in UI to loop around
-        'LAST': 1
-    },
-    'All': {
-        'NONE': 0,
-        'SQUARE': 1,
-        'TETRIS': 2,
-        'TETRIS_ROTATED': 3,
-        'SUN': 4,
-        'CANCELLATION': 5,
-        'TETRIS_HOLLOW': 6,
-        'TRIANGLE': 7,
-        // Used in UI to loop around
-        'LAST': 7
-    }
-}
-
 var NODE_TYPE = {
     'NORMAL': 0,
     'START': 1,
@@ -47,7 +19,32 @@ var EDGE_TYPE = {
     'LAST': 2
 };
 
-var CELL_TYPE = PUZZLE_TYPES['Squares'];
+var CELL_TYPE = {
+    'NONE': 0,
+    'SQUARE': 1,
+    'TETRIS': 2,
+    'TETRIS_ROTATED': 3,
+    'SUN': 4,
+    'CANCELLATION': 5,
+    'TETRIS_HOLLOW': 6,
+    'TRIANGLE': 7,
+}
+
+// Cycle through cells when you click behaviour
+var PUZZLE_TYPES = {
+    'Squares': [CELL_TYPE.NONE, CELL_TYPE.SQUARE],
+    'Triangles': [CELL_TYPE.NONE, CELL_TYPE.TRIANGLE],
+    'All': Object.values(CELL_TYPE)
+}
+// Drop-down default is Squares, so need to put Squares here
+var CELL_TYPES_TO_CYCLE = PUZZLE_TYPES["Squares"]
+
+function get_next_cell_type_in_cycle(current_type) {
+    var current_stage_in_cycle = CELL_TYPES_TO_CYCLE.indexOf(current_type)
+    var new_stage_in_cycle = current_stage_in_cycle + 1 % (CELL_TYPES_TO_CYCLE.length)
+    return CELL_TYPES_TO_CYCLE[new_stage_in_cycle]
+}
+
 
 var BACKGROUND_COLOR = '#BBBBBB';
 var BLACK = 0;
@@ -186,6 +183,7 @@ function initCells(puzzle) {
             puzzle.cells[x][y] = {type: CELL_TYPE.NONE, color: CELL_COLOR.BLACK};
 
             initTetrisLayout(puzzle, x, y);
+            initTriangleProperties(puzzle, x, y);
         }
     }
 }
@@ -220,6 +218,10 @@ function updateTetrisLayoutProperties(x, y) {
             }
         }
     }
+}
+
+function initTriangleProperties(puzzle, x, y) {
+    puzzle.cells[x][y].triangleNum = 1
 }
 
 function horEdgeExists(x, y) {
