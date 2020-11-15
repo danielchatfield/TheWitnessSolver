@@ -725,7 +725,7 @@ function getEdgesByType(type) {
 function findSolution(path, visited, required, edgeRequired, exitsRemaining, areas, segment) {
 
     // This block runs only on the first time findSolution is called
-    if (required) {
+    if (!required) {
 
         required = determineAuxilaryRequired();
 
@@ -779,7 +779,7 @@ function findSolution(path, visited, required, edgeRequired, exitsRemaining, are
         // If we're at an exit node and the partial solution along with the last
         // area is correct, then the full solution is correct
         if (puzzle.nodes[cn.x][cn.y].type == NODE_TYPE.EXIT) {
-            if (checkLastArea(prevn, cn, areas, segment) && checkRequiredNodes(path, required) && checkRequiredEdges(path, edgeRequired) && checkTriangleCells(path)) {
+            if (checkLastArea(prevn, cn, areas, segment) && checkRequiredNodes(path, required) && checkRequiredEdges(path, edgeRequired)) {
                 return path;
             } else {
                 exitsRemaining--;
