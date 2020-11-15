@@ -571,7 +571,7 @@ function addGridEventHandlers() {
 
         if(puzzle.cells[x][y].type == CELL_TYPE.TRIANGLE) {
             if(["1","2","3"].indexOf(e.key) >= 0) {
-                puzzle.cells[x][y].triangleNum = e.key
+                puzzle.cells[x][y].triangleNum = parseInt(e.key, 10);
             }
         }
 

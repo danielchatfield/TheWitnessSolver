@@ -815,20 +815,20 @@ function findSolution(path, visited, required, edgeRequired, exitsRemaining, are
 function checkTriangleCells(path) {
     // Step through path, incrementing a count of number of edges each cell has on the path
     // Then for each triangle cell validate that the constraint isn't violated.
-    var adjacentEdgeCount = new Array(puzzle.height * puzzle.width).fill(0);
+    var adjacentEdgeCount = new Array((puzzle.height - 1) * (puzzle.width -1)).fill(0);
 
     for (var i = 1; i < path.length; i++) {
         let e = edgeBetweenNodes(path[i-1], path[i]);
         let adjacentCells = cellsForEdge(e);
         for (const c of adjacentCells) {
-            adjacentEdgeCount[c.y * puzzle.width + c.x]++
+            adjacentEdgeCount[c.y * (puzzle.width-1) + c.x]++
         }
     }
 
 
     for (var c  of getCellsByType(CELL_TYPE.TRIANGLE)) {
         let expectedAdjacentEdges = puzzle.cells[c.x][c.y].triangleNum;
-        let actualEdgeCount = adjacentEdgeCount[c.y * puzzle.width + c.x];
+        let actualEdgeCount = adjacentEdgeCount[c.y * (puzzle.width -1) + c.x];
 
         if (expectedAdjacentEdges !== actualEdgeCount) {
             return false
@@ -860,7 +860,7 @@ function cellsForEdge(e) {
 }
 
 function edgeBetweenNodes(a,b) {
-    return edge(min(a.x, b.x), min(b.y, b.y), a.x == b.x? ORIENTATION_TYPE.VER : ORIENTATION_TYPE.HOR)
+    return edge(min(a.x, b.x), min(a.y, b.y), a.x == b.x? ORIENTATION_TYPE.VER : ORIENTATION_TYPE.HOR)
 }
 
 function min(a,b) {
