@@ -175,28 +175,6 @@ function addVisualSquareCell(x, y, baseEl) {
     iconEl.css('fill', getColorString(puzzle.cells[x][y].color));
 }
 
-function addVisualTriangleCell(x, y, baseEl) {
-    var top_x = nodeX(x) + spacing / 2
-
-    var width = spacing / 3.9 // Change this to change triangle size
-    var left_x = nodeX(x) + spacing / 2 - width / 2
-    var right_x = nodeX(x) + spacing / 2 + width / 2
-
-    var height = width * Math.sqrt(3) / 2
-    var top_y = nodeX(y) + spacing / 2 - height/2
-    var base_y = nodeX(y) + spacing / 2 + height/2
-
-    var top = top_x + "," + top_y
-    var left = left_x + "," + base_y
-    var right = right_x + "," + base_y
-
-    var iconEl = $('<polygon/>')
-        .attr('points', [top, left, right].join(" "))
-        .appendTo(gridEl);
-
-    iconEl.css('fill', getColorString(CELL_COLOR.ORANGE));
-}
-
 function addVisualGridTetrisCell(x, y, baseEl) {
     // Draw tetris grid
     for (var xx = 0; xx < 4; xx++) {
@@ -277,6 +255,29 @@ function addVisualCancellationCell(x, y, baseEl) {
     iconEl2.appendTo(gridEl);
     iconEl3.appendTo(gridEl);
 }
+
+function addVisualTriangleCell(x, y, baseEl) {
+    var top_x = nodeX(x) + spacing / 2
+
+    var width = spacing / 3.9 // Change this to change triangle size
+    var left_x = nodeX(x) + spacing / 2 - width / 2
+    var right_x = nodeX(x) + spacing / 2 + width / 2
+
+    var height = width * Math.sqrt(3) / 2
+    var top_y = nodeX(y) + spacing / 2 - height/2
+    var base_y = nodeX(y) + spacing / 2 + height/2
+
+    var top = top_x + "," + top_y
+    var left = left_x + "," + base_y
+    var right = right_x + "," + base_y
+
+    var iconEl = $('<polygon/>')
+        .attr('points', [top, left, right].join(" "))
+        .appendTo(gridEl);
+
+    iconEl.css('fill', getColorString(CELL_COLOR.ORANGE));
+}
+
 
 function addVisualGridEdges(drawHighlighted) {
     // Set up horizontal edges
@@ -472,8 +473,7 @@ function addGridEventHandlers() {
         var x = +this.getAttribute('data-x');
         var y = +this.getAttribute('data-y');
 
-        puzzle.cells[x][y].type = (puzzle.cells[x][y].type + 1) % (CELL_TYPE.LAST + 1);
-
+        puzzle.cells[x][y].type = get_next_cell_type_in_cycle(puzzle.cells[x][y].type)
         updateVisualGrid();
     });
     $('.cell').hover(function(){
@@ -724,7 +724,7 @@ puzzleTypeSelector.change(function() {
     //updateVisualGrid();
     var puzzle_type = this.value
     SELECTED_PUZZLE_TYPE = puzzle_type
-    CELL_TYPE = PUZZLE_TYPES[puzzle_type];
+    CELL_TYPES_TO_CYCLE = PUZZLE_TYPES[puzzle_type];
 });
 
 function initialize() {
