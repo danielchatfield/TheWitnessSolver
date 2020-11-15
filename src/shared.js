@@ -174,6 +174,7 @@ function initCells(puzzle) {
             puzzle.cells[x][y] = {type: CELL_TYPE.NONE, color: CELL_COLOR.BLACK};
 
             initTetrisLayout(puzzle, x, y);
+            initTriangleProperties(puzzle, x, y);
         }
     }
 }
@@ -208,6 +209,10 @@ function updateTetrisLayoutProperties(x, y) {
             }
         }
     }
+}
+
+function initTriangleProperties(puzzle, x, y) {
+    puzzle.cells[x][y].triangle_num = 1
 }
 
 function horEdgeExists(x, y) {

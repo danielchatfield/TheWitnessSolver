@@ -257,6 +257,8 @@ function addVisualCancellationCell(x, y, baseEl) {
 }
 
 function addVisualTriangleCell(x, y, baseEl) {
+    baseEl.attr('data-num-triangles', puzzle.cells[x][y].triangle_num)
+
     var top_x = nodeX(x) + spacing / 2
 
     var width = spacing / 3.9 // Change this to change triangle size
