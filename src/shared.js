@@ -46,7 +46,7 @@ var EDGE_TYPE = {
     'LAST': 2
 };
 
-var CELL_TYPE = PUZZLE_TYPES['All'];
+var CELL_TYPE = PUZZLE_TYPES['Squares'];
 
 var BACKGROUND_COLOR = '#BBBBBB';
 var BLACK = 0;
